@@ -1,10 +1,12 @@
 <?php
 
-use App\Models\Category;
 use App\Models\Post;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+
+use function Laravel\Prompts\table;
 
 return new class extends Migration
 {
@@ -13,10 +15,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('category_post', function (Blueprint $table) {
+        Schema::create('post_like', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Post::class);
-            $table->foreignIdFor(Category::class);
+            $table->foreignIdFor(User::class)->index();
+            $table->foreignIdFor(Post::class)->index();
+            $table->timestamps();
         });
     }
 
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('category_post');
+        Schema::dropIfExists('post_like');
     }
 };

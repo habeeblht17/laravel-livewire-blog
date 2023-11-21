@@ -1,6 +1,6 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'pages/welcome');
 Route::view('/home', 'pages/home')->name('home');
+// Route::get('/blog', [PostController::class, 'index'])->name('posts.index');
 Route::view('/blog', 'pages/blog')->name('blog');
+// Route::view('/blog/{post:slug}', 'pages/show')->name('show.post');
+Route::get('/blog/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 
 Route::prefix('admin')->middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'admin\dashboard')->name('dashboard');

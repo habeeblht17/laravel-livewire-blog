@@ -18,9 +18,9 @@ new class extends Component
     public $title = '';
     public $slug = '';
     public $content = '';
-    public $image = '';
-    public $published_at = '';
-    public $featured = '';
+    public bool $featured = false;
+    public $image;
+    public $published_at;
     public $postId;
 
     public $category = [];
@@ -62,12 +62,14 @@ new class extends Component
 
     public function createPost()
     {
+        $this->reset();
+
         $this->validate([
             'title' => 'required|string|max:225|min:3',
             'slug' => 'required|string|max:225|min:3|unique:categories,slug',
             'content' => 'required|string|min:10',
-            'image' => 'nullable|sometimes|max:1024',
-            'featured' => 'nullable|boolean',
+            'image' => 'required|image|max:1024',
+            'featured' => 'boolean',
             'published_at' => 'nullable',
         ]);
 
@@ -75,7 +77,7 @@ new class extends Component
            $postImage = $this->image->store('uploads\images', 'public');
         }
 
-        Post::create([
+        $post = Post::create([
             'user_id' => Auth::user()->id,
             'title' => $this->title,
             'slug' => $this->slug,
@@ -84,9 +86,14 @@ new class extends Component
             'featured' => $this->featured,
             'published_at' => $this->published_at,
         ]);
+
+        $post->categories()->syncWithoutDetaching($this->category);
+
+        $this->dispatch('close');
+        $this->redirect(route('post'), navigate: true);
         session()->flash('success', 'Post created successfully!!');
         $this->reset();
-        $this->redirect(route('post'), navigate: true);
+
 
     }
 
@@ -106,9 +113,9 @@ new class extends Component
             $this->title = $post->title;
             $this->slug = $post->slug;
             $this->content = $post->content;
-            $this->published_at = $post->published_at;
+            $this->published_at = $post->published_at->format("d-m-Y h:i:sa");
             $this->featured = $post->featured;
-            $this->image = $post->image;
+            $this->image = Storage::disk('public')->url($post->image);
         }
 
     }
@@ -116,12 +123,12 @@ new class extends Component
     public function update()
     {
         $this->validate([
-            'title' => 'required|string|max:225|min:3',
-            'slug' => 'required|string|max:225|min:3|unique:categories,slug',
-            'content' => 'required|string|min:10',
-            'image' => 'nullable|sometimes|max:1024',
-            'featured' => 'nullable|boolean',
-            'published_at' => 'nullable|date',
+            'title' => 'string|max:225|min:3',
+            'slug' => 'string|max:225|min:3|unique:categories,slug',
+            'content' => 'string|min:10',
+            'image' => 'nullable|image|max:1024',
+            'featured' => 'boolean',
+            'published_at' => 'nullable',
         ]);
 
         $post = Post::findOrFail($this->postId);
@@ -130,12 +137,16 @@ new class extends Component
             session()->flash('error', 'Post not found!');
         }
 
-        if($this->image){
+        if( !$this->image){
+            $photo = $post->image;
+
+        } else {
+
             //Delete Old image
             Storage::disk('public')->delete('uploads/images/'.$post->image);
 
             //store new image
-            $postImage = $this->image->store('uploads\images', 'public');
+            $photo = $this->image->store('uploads\images', 'public');
         }
 
         $post->update([
@@ -143,13 +154,18 @@ new class extends Component
             'title' => $this->title,
             'slug' => $this->slug,
             'content' => $this->content,
-            'image' => $postImage,
+            'image' => $photo,
             'featured' => $this->featured,
             'published_at' => $this->published_at,
         ]);
+
+        $post->categories()->syncWithoutDetaching($this->category);
+
+        $this->dispatch('close');
+        $this->redirect(route('post'), navigate: true);
         session()->flash('success', 'Post updated successfully!!');
         $this->reset();
-        $this->redirect(route('post'), navigate: true);
+
 
     }
 
@@ -172,10 +188,11 @@ new class extends Component
         Storage::disk('public')->delete('uploads/images'.$post->image);
         $post->delete();
 
-
-        session()->flash('success', 'Post deleted successfully!!');
         $this->dispatch('close');
         $this->redirect(route('post'), navigate: true);
+        session()->flash('success', 'Post deleted successfully!!');
+        $this->reset();
+        $this->resetPage();
     }
 };
 ?>
@@ -291,7 +308,7 @@ new class extends Component
                     <!--End Per page -->
 
                     <div class="px-4 pb-5">
-                        <span>{{ $this->posts->links() }}</span>
+                        <span>{{ $this->posts->onEachSide(1)->links() }}</span>
                     </div>
                 </div>
             </div>
@@ -310,7 +327,7 @@ new class extends Component
             <!-- End Head -->
 
             <!-- Body -->
-            <div class="p-5">
+            <div class="p-5 ">
                 <div class="flex justify-start mt-4 space-x-4">
                     <!-- Title -->
                     <div class="w-1/2">
@@ -348,12 +365,22 @@ new class extends Component
                     </div>
                 </div>
 
-                <!-- Image -->
-                <div class="w-1/2 mt-4">
-                    <x-input-label for="image" :value="__('Post Image')" />
-                    <x-text-input wire:model="image" id="" class="block w-full p-2 mt-1 border-gray-700 border-1" type="file" required autofocus autocomplete="image" />
-                    <x-input-error :messages="$errors->get('image')" class="mt-1" />
+                <div class="flex justify-start mt-4 space-x-4">
+                    <!-- Image -->
+                    <div class="w-1/2 mt-4">
+                        <x-input-label for="image" :value="__('Post Image')" />
+                        <input wire:model="image" id="" class="block w-full p-2 mt-1 border-2 border-purple-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" type="file" required />
+                        <x-input-error :messages="$errors->get('image')" class="mt-1" />
+                    </div>
+
+                    {{-- <div class="w-1/2 mt-4">
+                        @if ($image)
+                            <h3>New Image</h3>
+                            <img src="{{ $image->temporaryUrl() }}" class="h-30 w-40 rounded-lg mt-1">
+                        @endif
+                    </div> --}}
                 </div>
+
 
                 <!-- Content -->
                 <div class="mt-4">
@@ -422,11 +449,16 @@ new class extends Component
                 </div>
 
                 <div class="flex justify-start mt-4 space-x-4">
-                    <!-- Image -->
+                    <!-- category -->
                     <div class="w-1/2">
-                        <x-input-label for="image" :value="__('Post Image')" />
-                        <x-text-input wire:model="image" id="" class="block w-full mt-1" type="file" name="image" required autofocus autocomplete="image" />
-                        <x-input-error :messages="$errors->get('image')" class="mt-1" />
+                        <x-input-label for="category" :value="__('Post Category')" />
+                        <select multiple wire:model="category" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option disabled>Select Category...</option>
+                            @foreach ($this->categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->title }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('category')" class="mt-1" />
                     </div>
 
                     <!-- Published_at -->
@@ -435,6 +467,16 @@ new class extends Component
                         <x-text-input wire:model="published_at" id="published_at" class="block w-full mt-1" type="datetime-local" name="published_at" required autofocus autocomplete="published_at" />
                         <x-input-error :messages="$errors->get('published_at')" class="mt-1" />
                     </div>
+                </div>
+
+                <div class="flex justify-start mt-4 space-x-4">
+                    <!-- Image -->
+                    <div class="w-1/2 mt-4">
+                        <x-input-label for="image" :value="__('Post Image')" />
+                        <input wire:model="image" id="" class="block w-full p-2 mt-1 border-2 border-purple-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm" type="file" required />
+                        <x-input-error :messages="$errors->get('image')" class="mt-1" />
+                    </div>
+
                 </div>
 
                 <!-- Content -->

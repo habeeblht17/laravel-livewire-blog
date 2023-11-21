@@ -12,6 +12,7 @@
         'violet'=> 'text-violet-800',
         'pink'=> 'text-pink-800',
         'orange'=> 'text-orange-800',
+        'fuchsia'=> 'text-fuchsia-800',
         default => 'text-gray-800',
     }
 @endphp
@@ -28,10 +29,11 @@
         'violet'=> 'bg-violet-100',
         'pink'=> 'bg-pink-100',
         'orange'=> 'bg-orange-100',
+        'fuchsia'=> 'text-fuchsia-100',
         default => 'bg-gray-100',
     }
 @endphp
 
-<a href="#" class=" {{ $textColor }} {{ $bgColor }} rounded-xl px-3 py-1 text-base">
+<button {{ $attributes }} class=" {{ $textColor }} {{ $bgColor }} rounded-xl px-3 py-1 text-base">
     {{ $slot }}
-</a>
+</button>
