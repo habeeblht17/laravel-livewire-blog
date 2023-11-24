@@ -25,7 +25,7 @@
             <div class="article-actions-bar mt-6 flex items-center justify-between">
                 <div class="flex gap-x-2">
                     @foreach ($post->categories as $category)
-                        <x-badge wire:navigate href="{{ route('blog', ['category' => $category->slug]) }}" :textColor="$category->text_color" :bgColor="$category->bg_color">
+                        <x-badge wire:navigate wire:key="{{ $category->id }}" href="{{ route('blog', ['category' => $category->slug]) }}" :textColor="$category->text_color" :bgColor="$category->bg_color">
                             {{ $category->title }}
                         </x-badge>
                     @endforeach

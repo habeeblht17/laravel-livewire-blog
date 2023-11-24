@@ -21,6 +21,9 @@ new class extends Component {
     #[Url]
     public $category = '';
 
+    #[Url]
+    public $popular = false;
+
 
     public function setSort($sort)
     {
@@ -43,10 +46,15 @@ new class extends Component {
     #[Computed()]
     public function posts()
     {
-        return Post::published()->orderBy('published_at', $this->sort)
+        return Post::published()
         ->when($this->activeCategory, function ($query) {
             $query->withCategory($this->category);
-        })->where('title', 'like', "%{$this->search}%")
+        })
+        ->when($this->popular, function($query) {
+            $query->popular();
+        })
+        ->search($this->search)
+        ->orderBy('published_at', $this->sort)
         ->paginate(10);
     }
 
@@ -87,6 +95,9 @@ new class extends Component {
                         @endif
                     </div>
                     <div id="filter-selector" class="flex items-center space-x-4 font-light ">
+                        <x-checkbox wire:model.live="popular" />
+                        <x-input-label for="popular" class="mr-2" :value="__('Popular')"  />
+
                         <button wire:click="setSort('DESC')" class="{{ $sort === 'DESC' ? 'text-purple-950 py-4 border-b-2 border-purple-950' : 'text-purple-600'}} py-4">Latest</button>
                         <button wire:click="setSort('ASC')" class="{{ $sort === 'ASC' ? 'text-purple-950 py-4 border-b-2 border-purple-950' : 'text-purple-600'}} py-4">Oldest</button>
                     </div>
@@ -103,13 +114,14 @@ new class extends Component {
             </div>
         </div>
         <div id="side-bar" class="border-t border-t-gray-100 md:border-t-none col-span-4 md:col-span-1 px-2 md:px-4  space-y-10 py-6 pt-10 md:border-l border-gray-100 h-screen sticky top-0">
-            <livewire:search-box />
+
+            <livewire:partials.search-box />
 
             <div id="recommended-topics-box">
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">Recommended Topics</h3>
                 <div class="topics flex flex-wrap justify-start gap-2">
                     @foreach ($this->categories as $category)
-                        <x-badge wire:navigate href="{{ route('blog', ['category' => $category->slug]) }}"  :textColor="$category->text_color" :bgColor="$category->bg_color">
+                        <x-badge wire:navigate wire:key="{{ $category->id }}" href="{{ route('blog', ['category' => $category->slug]) }}"  :textColor="$category->text_color" :bgColor="$category->bg_color">
                             {{ $category->title }}
                         </x-badge>
                     @endforeach

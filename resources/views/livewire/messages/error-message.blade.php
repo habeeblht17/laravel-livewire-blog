@@ -1,6 +1,6 @@
 <div id="alert-3"
     x-data="{ showAlert: true }"
-    x-init="setTimeout(() => showAlert = false, 5000)"
+    x-init="setTimeout(() => showAlert = false, 4000)"
     x-show="showAlert"
     x-transition:enter="transition ease-out duration-300"
     x-transition:enter-start="opacity-60 transform scale-90"

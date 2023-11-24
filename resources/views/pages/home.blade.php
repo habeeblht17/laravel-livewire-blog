@@ -1,4 +1,4 @@
-<x-home-layout>
+<x-home-layout title="Home">
     <x-hero></x-hero>
 
     <div class="py-6 bg-purple-50">

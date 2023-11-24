@@ -10,11 +10,11 @@
                     @endforeach
                 </div>
             </div>
-            <a href="http://127.0.0.1:8000/blog" class="mt-10 block text-center text-lg text-purple-700 font-semibold">
+            <a wire:navigate href="{{ route('blog') }}" class="mt-10 block text-center text-lg text-purple-700 font-semibold">
                 More Posts
             </a>
         </div>
-        <hr>
+
 
         <!-- Latest Post-->
         <h2 class="mt-16 mb-5 text-3xl text-purple-700 font-bold">Latest Posts</h2>
@@ -25,7 +25,7 @@
                 @endforeach
             </div>
         </div>
-        <a href="http://127.0.0.1:8000/blog" class="mt-10 block text-center text-lg text-purple-700 font-semibold">
+        <a wire:navigate href="{{ route('blog') }}" class="mt-10 block text-center text-lg text-purple-700 font-semibold">
             More Posts
         </a>
     </div>

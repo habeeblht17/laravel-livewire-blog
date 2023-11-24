@@ -28,16 +28,42 @@ class User extends Authenticatable
      *
      * @return void
      */
+    /**
+     * posts
+     *
+     * @return void
+     */
     public function posts()
     {
         return $this->hasMany(Post::class);
     }
 
+    /**
+     * likes
+     *
+     * @return void
+     */
     public function likes()
     {
         return $this->belongsToMany(Post::class, 'post_like')->withTimestamps();
     }
 
+    /**
+     * comments
+     *
+     * @return void
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * hasLiked
+     *
+     * @param  mixed $post
+     * @return void
+     */
     public function hasLiked(Post $post)
     {
         return $this->likes()->where('post_id', $post->id)->exists();

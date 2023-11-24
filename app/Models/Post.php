@@ -46,28 +46,62 @@ class Post extends Model
         return $this->belongsToMany(Category::class)->withTimestamps();
     }
 
+    /**
+     * likes
+     *
+     * @return void
+     */
     public function likes()
     {
         return $this->belongsToMany(User::class, 'post_like')->withTimestamps();
     }
 
     /**
+     * comments
+     *
+     * @return void
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+
+    /**
      * scopeSearch
      *
      * @param  mixed $query
-     * @param  mixed $value
+     * @param  mixed $search
      * @return void
      */
-    public function scopeSearch($query, $value)
+    public function scopeSearch($query, $search = '')
     {
-        $query->where('title', 'like', "%{$value}%")->orWhere('slug', 'like', "%{$value}%");
+        $query->where('title', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%");
     }
 
+    /**
+     * scopeWithCategory
+     *
+     * @param  mixed $query
+     * @param  mixed $category
+     * @return void
+     */
     public function scopeWithCategory($query, $category)
     {
         $query->whereHas('categories', function ($query) use ($category) {
             $query->where('slug', $category);
         });
+    }
+
+    /**
+     * scopePopular
+     *
+     * @param  mixed $query
+     * @return void
+     */
+    public function scopePopular($query)
+    {
+        $query->withCount('likes')->orderBy('likes_count', 'desc');
     }
 
     /**
